@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# local-only notes
+NOTES.local.md
+.env
+.env.local

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- noindex/nofollow keeps this off Google. Anyone with the link can    -->
+  <!-- still book; that's by design — the link is what we share with        -->
+  <!-- candidates. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dwell Church — Book your interview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      color: #1f2937;
+      background: #ffffff;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #00cccc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    /* -------- Brand header (matches Next Gen Hub) -------- */
+    .brand {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      gap: 4px; margin: 8px 0 28px;
+    }
+    .brand-icon { width: 96px; height: 96px; object-fit: contain; display: block; }
+    .brand-wordmark {
+      font-size: 38px; font-weight: 300; letter-spacing: 0.18em;
+      color: #111827; margin-top: 4px; padding-left: 0.18em;
+    }
+    .brand-tag {
+      font-family: "Permanent Marker", "Marker Felt", cursive;
+      font-size: 22px; color: #00cccc; letter-spacing: 0.04em; margin-top: -2px;
+    }
+    header h1 {
+      font-size: 24px; font-weight: 500; margin: 0 0 6px;
+      letter-spacing: -0.01em; text-align: center; color: #1f2937;
+    }
+    header .subtitle { color: #6b7280; margin: 0 0 24px; font-size: 15px; text-align: center; }
+
+    /* -------- Step cards -------- */
+    .step {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 22px 24px; margin-bottom: 16px;
+    }
+    .step h2 { font-size: 17px; font-weight: 600; margin: 0 0 4px; color: #111827; }
+    .step .step-help { color: #6b7280; font-size: 14px; margin: 0 0 16px; }
+    .step.locked { opacity: 0.5; pointer-events: none; }
+
+    /* -------- Reviewer picker -------- */
+    .reviewers { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .reviewer-btn {
+      padding: 14px 16px; border: 1px solid #d1d5db; border-radius: 10px;
+      background: #fff; color: #1f2937; font-size: 15px; font-weight: 500;
+      cursor: pointer; text-align: center; transition: all 0.15s ease;
+    }
+    .reviewer-btn:hover { border-color: #00cccc; background: #f0fdfd; }
+    .reviewer-btn.active {
+      border-color: #00cccc; background: #00cccc; color: #fff;
+    }
+
+    /* -------- Slot grid -------- */
+    .slots-empty { color: #6b7280; font-size: 14px; padding: 16px 0; }
+    .slot-day { margin-bottom: 18px; }
+    .slot-day h3 {
+      font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 8px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .slot-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .slot-btn {
+      padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+      background: #fff; color: #1f2937; font-size: 14px; font-family: inherit;
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .slot-btn:hover:not(:disabled) { border-color: #00cccc; background: #f0fdfd; }
+    .slot-btn.active {
+      border-color: #00cccc; background: #00cccc; color: #fff; font-weight: 500;
+    }
+    .slot-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .tz-note { font-size: 12px; color: #9ca3af; margin-top: 12px; }
+
+    /* -------- Booking form -------- */
+    .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+    .form-row label { font-size: 13px; font-weight: 500; color: #374151; }
+    .form-row input {
+      padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 15px; font-family: inherit;
+    }
+    .form-row input:focus { outline: none; border-color: #00cccc; box-shadow: 0 0 0 3px rgba(0,204,204,0.15); }
+
+    .summary {
+      background: #f0fdfd; border: 1px solid #00cccc; border-radius: 8px;
+      padding: 12px 14px; font-size: 14px; margin-bottom: 14px; color: #115e59;
+    }
+
+    button.btn-primary {
+      background: #00cccc; color: #fff; border: 1px solid #00cccc;
+      font-weight: 500; padding: 10px 18px; border-radius: 8px;
+      font-size: 15px; font-family: inherit; cursor: pointer;
+    }
+    button.btn-primary:hover:not(:disabled) { background: #00b3b3; border-color: #00b3b3; }
+    button.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status { font-size: 14px; margin-top: 10px; min-height: 18px; }
+    .status.success { color: #15803d; }
+    .status.error { color: #b91c1c; }
+    .status.info { color: #6b7280; }
+
+    /* -------- Confirmation panel -------- */
+    .confirm-panel {
+      background: #f0fdf4; border: 1px solid #16a34a; border-radius: 12px;
+      padding: 24px; text-align: center;
+    }
+    .confirm-panel h2 { color: #15803d; font-size: 20px; margin: 0 0 8px; }
+    .confirm-panel p { color: #166534; margin: 0 0 4px; font-size: 15px; }
+    .confirm-panel .small { color: #6b7280; font-size: 13px; margin-top: 12px; }
+
+    footer {
+      text-align: center; color: #9ca3af; font-size: 13px;
+      margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="wrap">
+    <header>
+      <div class="brand">
+        <img class="brand-icon" src="assets/dwell-icon.png" alt="Dwell Church">
+        <div class="brand-wordmark">dwell</div>
+        <div class="brand-tag">INTERVIEWS</div>
+      </div>
+      <h1>Book your interview</h1>
+      <p class="subtitle">A 15-minute phone call with one of our reviewers.</p>
+    </header>
+
+    <!-- Step 1: pick a reviewer -->
+    <section class="step" id="step-reviewer">
+      <h2>1. Who are you meeting with?</h2>
+      <p class="step-help">Pick the reviewer Matt or Jenny told you you'd be paired with.</p>
+      <div class="reviewers" id="reviewer-list"></div>
+    </section>
+
+    <!-- Step 2: pick a slot -->
+    <section class="step locked" id="step-slot">
+      <h2>2. Pick a time that works</h2>
+      <p class="step-help">All times shown in <strong id="tz-label">your local timezone</strong>.</p>
+      <div id="slots"></div>
+    </section>
+
+    <!-- Step 3: enter your details + confirm -->
+    <section class="step locked" id="step-details">
+      <h2>3. Your details</h2>
+      <p class="step-help">We need your phone number so the reviewer can call you.</p>
+      <div class="summary" id="summary" hidden></div>
+      <form id="book-form">
+        <div class="form-row">
+          <label for="f-name">Full name</label>
+          <input type="text" id="f-name" autocomplete="name" required>
+        </div>
+        <div class="form-row">
+          <label for="f-email">Email</label>
+          <input type="email" id="f-email" autocomplete="email" required>
+        </div>
+        <div class="form-row">
+          <label for="f-phone">Phone number</label>
+          <input type="tel" id="f-phone" autocomplete="tel" required placeholder="(555) 123-4567">
+        </div>
+        <button type="submit" class="btn-primary" id="book-btn">Confirm booking</button>
+        <div class="status" id="book-status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <!-- Confirmation (hidden until success) -->
+    <section class="step" id="step-done" hidden>
+      <div class="confirm-panel">
+        <h2>You're booked.</h2>
+        <p id="done-summary">—</p>
+        <p class="small">A Google Calendar invite has been sent to your email.
+          The reviewer will call you at the scheduled time. Questions? Reply to the invite.</p>
+      </div>
+    </section>
+
+    <footer>
+      Dwell Church of the Peninsula · interview scheduler
+    </footer>
+  </main>
+
+<script>
+/* =====================================================================
+ * CONFIG — fill in APPS_SCRIPT_URL after deploying Code.gs (DEPLOY.md
+ * walks through it). Until this is set, the page renders but every
+ * fetch call fails with a clear error.
+ * ===================================================================== */
+const CONFIG = {
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzbw-WOlc1tZUjeQV91cWaOdBMwx02OW40rFSG5nR4Mn9U5QShKVk79vA4lQbw7P54d/exec",
+};
+
+/* Static reviewer roster — must stay in sync with REVIEWERS in Code.gs.
+ * Kept on the static page so reviewer cards render instantly without
+ * waiting on a backend fetch.
+ */
+const REVIEWERS = [
+  { id: "matt-stephan",     name: "Matt Stephan" },
+  { id: "karina-wilhelms",  name: "Karina Wilhelms" },
+  { id: "eunice-nichols",   name: "Eunice Nichols" },
+  { id: "brian-wo",         name: "Brian Wo" },
+  { id: "lisa-mario",       name: "Lisa Mario" },
+  { id: "annie-kuo",        name: "Annie Kuo" },
+];
+
+/* =====================================================================
+ * State
+ * ===================================================================== */
+let selectedReviewer = null;  // { id, name }
+let selectedSlot = null;       // { start, end } ISO strings
+
+const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "your local timezone";
+document.getElementById('tz-label').textContent = tz;
+
+/* =====================================================================
+ * Render: reviewer cards
+ * ===================================================================== */
+const reviewerListEl = document.getElementById('reviewer-list');
+REVIEWERS.forEach(r => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'reviewer-btn';
+  btn.textContent = r.name;
+  btn.dataset.id = r.id;
+  btn.addEventListener('click', () => selectReviewer(r));
+  reviewerListEl.appendChild(btn);
+});
+
+function selectReviewer(r) {
+  selectedReviewer = r;
+  selectedSlot = null;
+
+  // UI: highlight the chosen reviewer, unlock step 2, lock step 3
+  document.querySelectorAll('.reviewer-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === r.id);
+  });
+  document.getElementById('step-slot').classList.remove('locked');
+  document.getElementById('step-details').classList.add('locked');
+  document.getElementById('summary').hidden = true;
+  document.getElementById('book-status').textContent = '';
+
+  loadSlots(r.id);
+}
+
+/* =====================================================================
+ * Fetch + render: available slots for the chosen reviewer
+ * ===================================================================== */
+async function loadSlots(reviewerId) {
+  const slotsEl = document.getElementById('slots');
+  slotsEl.innerHTML = '<div class="slots-empty">Loading available times…</div>';
+
+  if (CONFIG.APPS_SCRIPT_URL.startsWith('REPLACE_ME')) {
+    slotsEl.innerHTML = '<div class="slots-empty">Backend not configured yet — Matt needs to finish deploying.</div>';
+    return;
+  }
+
+  try {
+    const url = CONFIG.APPS_SCRIPT_URL + '?action=availability&reviewer=' + encodeURIComponent(reviewerId);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'unknown error');
+    renderSlots(data.slots || []);
+  } catch (err) {
+    slotsEl.innerHTML = '<div class="slots-empty">Couldn\'t load times: ' + escapeHtml(String(err.message || err)) + '</div>';
+  }
+}
+
+function renderSlots(slots) {
+  const slotsEl = document.getElementById('slots');
+  if (slots.length === 0) {
+    slotsEl.innerHTML = '<div class="slots-empty">No open times for this reviewer yet. Check back in a bit, or reach out to Matt.</div>';
+    return;
+  }
+
+  // Group slots by local day
+  const byDay = new Map();
+  slots.forEach(s => {
+    const d = new Date(s.start);
+    const dayKey = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    if (!byDay.has(dayKey)) byDay.set(dayKey, []);
+    byDay.get(dayKey).push(s);
+  });
+
+  slotsEl.innerHTML = '';
+  for (const [dayKey, daySlots] of byDay) {
+    const wrap = document.createElement('div');
+    wrap.className = 'slot-day';
+    const h = document.createElement('h3');
+    h.textContent = dayKey;
+    wrap.appendChild(h);
+
+    const grid = document.createElement('div');
+    grid.className = 'slot-grid';
+    daySlots.forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot-btn';
+      btn.textContent = formatTime(s.start);
+      btn.dataset.start = s.start;
+      btn.dataset.end = s.end;
+      btn.addEventListener('click', () => selectSlot(s, btn));
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(grid);
+    slotsEl.appendChild(wrap);
+  }
+
+  const tzNote = document.createElement('div');
+  tzNote.className = 'tz-note';
+  tzNote.textContent = 'Times shown in ' + tz + '. We store and confirm in Pacific time.';
+  slotsEl.appendChild(tzNote);
+}
+
+function selectSlot(slot, btn) {
+  selectedSlot = slot;
+  document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Unlock step 3, show summary
+  document.getElementById('step-details').classList.remove('locked');
+  const summary = document.getElementById('summary');
+  summary.textContent =
+    'Booking with ' + selectedReviewer.name + ' on ' +
+    new Date(slot.start).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) +
+    ' at ' + formatTime(slot.start) + '.';
+  summary.hidden = false;
+
+  // Scroll the form into view so the candidate isn't hunting for it
+  document.getElementById('step-details').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* =====================================================================
+ * Submit: book the slot
+ * ===================================================================== */
+const form = document.getElementById('book-form');
+form.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (!selectedReviewer || !selectedSlot) {
+    setStatus('Pick a reviewer and a time first.', 'error');
+    return;
+  }
+  if (CONFIG.APPS_SCRIPT_URL.startsWith('REPLACE_ME')) {
+    setStatus('Backend not configured yet — tell Matt.', 'error');
+    return;
+  }
+
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  if (!name || !email || !phone) {
+    setStatus('Name, email, and phone are all required.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('book-btn');
+  btn.disabled = true;
+  setStatus('Booking…', 'info');
+
+  // multipart/form-data is CORS-safelisted, so this POST goes out
+  // without preflight. We use no-cors mode because Apps Script doesn't
+  // return CORS headers; tradeoff is we can't read the response body.
+  // We confirm success by re-fetching availability and checking that
+  // our slot is gone.
+  const fd = new FormData();
+  fd.append('action', 'book');
+  fd.append('reviewer_id', selectedReviewer.id);
+  fd.append('slot_start', selectedSlot.start);
+  fd.append('slot_end', selectedSlot.end);
+  fd.append('candidate_name', name);
+  fd.append('candidate_email', email);
+  fd.append('candidate_phone', phone);
+
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+
+    // Confirmation: re-fetch availability and look for our slot. If it's
+    // gone, the booking went through. If it's still there after a beat,
+    // something went wrong server-side (most likely the slot was already
+    // booked by someone else — the backend rejects with 409-ish error).
+    await new Promise(r => setTimeout(r, 800));
+    const confirmRes = await fetch(CONFIG.APPS_SCRIPT_URL +
+      '?action=availability&reviewer=' + encodeURIComponent(selectedReviewer.id));
+    const confirm = await confirmRes.json();
+    const stillOpen = (confirm.slots || []).some(s => s.start === selectedSlot.start);
+
+    if (stillOpen) {
+      setStatus("Hmm, the booking didn't go through — that slot may have just been taken. Pick another time and try again.", 'error');
+      btn.disabled = false;
+      // Reload slots so they can pick a fresh one
+      await loadSlots(selectedReviewer.id);
+      return;
+    }
+
+    showConfirmation(name, selectedReviewer.name, selectedSlot);
+  } catch (err) {
+    setStatus('Network error — check your connection and try again.', 'error');
+    btn.disabled = false;
+  }
+});
+
+function setStatus(text, kind) {
+  const el = document.getElementById('book-status');
+  el.textContent = text;
+  el.className = 'status ' + (kind || 'info');
+}
+
+function showConfirmation(candidateName, reviewerName, slot) {
+  // Hide the steps; show the confirmation panel.
+  ['step-reviewer', 'step-slot', 'step-details'].forEach(id => {
+    document.getElementById(id).hidden = true;
+  });
+  const done = document.getElementById('step-done');
+  done.hidden = false;
+  document.getElementById('done-summary').textContent =
+    candidateName + ", you're booked with " + reviewerName + ' on ' +
+    new Date(slot.start).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) +
+    ' at ' + formatTime(slot.start) + '.';
+  // Bring it into view in case they were scrolled down
+  done.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* =====================================================================
+ * Helpers
+ * ===================================================================== */
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+}
+</script>
+</body>
+</html>

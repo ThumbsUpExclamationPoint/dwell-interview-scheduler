@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dwell — Set your interview availability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      color: #1f2937;
+      background: #ffffff;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      /* Disable browser text-selection during drag-paint so the user           */
+      /* doesn't accidentally highlight slot labels while painting.             */
+      user-select: none; -webkit-user-select: none;
+    }
+    a { color: #00cccc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 920px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    .brand {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      gap: 4px; margin: 8px 0 28px;
+    }
+    .brand-icon { width: 96px; height: 96px; object-fit: contain; display: block; }
+    .brand-wordmark {
+      font-size: 38px; font-weight: 300; letter-spacing: 0.18em;
+      color: #111827; margin-top: 4px; padding-left: 0.18em;
+    }
+    .brand-tag {
+      font-family: "Permanent Marker", "Marker Felt", cursive;
+      font-size: 22px; color: #00cccc; letter-spacing: 0.04em; margin-top: -2px;
+    }
+    header h1 {
+      font-size: 24px; font-weight: 500; margin: 0 0 6px;
+      letter-spacing: -0.01em; text-align: center; color: #1f2937;
+    }
+    header .subtitle { color: #6b7280; margin: 0 0 24px; font-size: 15px; text-align: center; }
+
+    .card {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 20px 22px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 17px; font-weight: 600; margin: 0 0 4px; color: #111827; }
+    .card .help { color: #6b7280; font-size: 14px; margin: 0 0 14px; }
+
+    /* -------- Reviewer picker -------- */
+    .picker-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .picker-row label { font-size: 14px; color: #374151; font-weight: 500; }
+    select {
+      padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 15px; font-family: inherit; background: #fff;
+    }
+    select:focus { outline: none; border-color: #00cccc; box-shadow: 0 0 0 3px rgba(0,204,204,0.15); }
+
+    /* -------- Day section -------- */
+    .day { margin-bottom: 22px; }
+    .day-header {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+      margin-bottom: 8px; flex-wrap: wrap;
+    }
+    .day-name {
+      font-size: 14px; font-weight: 600; color: #374151;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .day-actions { display: flex; gap: 6px; }
+    .day-actions button {
+      font-size: 12px; padding: 4px 10px; border-radius: 6px;
+      background: #fff; border: 1px solid #d1d5db; color: #6b7280;
+      font-family: inherit; cursor: pointer;
+    }
+    .day-actions button:hover { color: #00cccc; border-color: #00cccc; }
+
+    /* -------- Slot cells -------- */
+    .slot-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+      gap: 4px;
+    }
+    .slot {
+      padding: 8px 4px; border: 1px solid #e5e7eb; border-radius: 6px;
+      background: #fff; color: #6b7280; font-size: 13px; font-family: inherit;
+      text-align: center; cursor: pointer; transition: background 0.08s, color 0.08s, border-color 0.08s;
+    }
+    .slot:hover { border-color: #00cccc; }
+    .slot.selected {
+      background: #00cccc; color: #fff; border-color: #00cccc; font-weight: 500;
+    }
+    .slot.booked {
+      background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb;
+      cursor: not-allowed; font-style: italic;
+    }
+    .slot.booked::after { content: " · booked"; font-size: 10px; }
+
+    /* -------- Save bar -------- */
+    .save-bar {
+      position: sticky; bottom: 16px; margin-top: 24px;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .save-bar .count { font-size: 14px; color: #374151; }
+    button.btn-primary {
+      background: #00cccc; color: #fff; border: 1px solid #00cccc;
+      font-weight: 500; padding: 10px 18px; border-radius: 8px;
+      font-size: 15px; font-family: inherit; cursor: pointer;
+    }
+    button.btn-primary:hover:not(:disabled) { background: #00b3b3; border-color: #00b3b3; }
+    button.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status { font-size: 14px; min-height: 18px; }
+    .status.success { color: #15803d; }
+    .status.error { color: #b91c1c; }
+    .status.info { color: #6b7280; }
+
+    /* -------- Password gate (matches Next Gen Hub) -------- */
+    .gate {
+      position: fixed; inset: 0; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10; padding: 20px;
+    }
+    .gate[hidden], #main[hidden] { display: none !important; }
+    .gate-card {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 28px 26px; max-width: 380px; width: 100%;
+    }
+    .gate-card h2 { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+    .gate-card p { margin: 0 0 16px; color: #6b7280; font-size: 14px; }
+    .gate-card input {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #d1d5db;
+      font-size: 15px; font-family: inherit; margin-bottom: 12px;
+    }
+    .gate-card button {
+      width: 100%; padding: 10px; background: #00cccc; color: #fff;
+      border: 1px solid #00cccc; border-radius: 8px; font-weight: 500;
+      font-family: inherit; font-size: 15px; cursor: pointer;
+    }
+    .gate-card button:hover { background: #00b3b3; border-color: #00b3b3; }
+    .gate-card .err { color: #b91c1c; font-size: 13px; margin-top: 4px; min-height: 16px; }
+
+    footer {
+      text-align: center; color: #9ca3af; font-size: 13px;
+      margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Soft password gate (same pattern as Next Gen Hub) -->
+  <div class="gate" id="gate" hidden>
+    <div class="gate-card">
+      <div class="brand" style="margin: 0 0 18px;">
+        <img class="brand-icon" src="assets/dwell-icon.png" alt="Dwell Church" style="width: 64px; height: 64px;">
+        <div class="brand-tag" style="font-size: 16px; margin-top: 2px;">INTERVIEWS</div>
+      </div>
+      <h2>Reviewer access</h2>
+      <p>Enter the shared reviewer password.</p>
+      <input type="password" id="gate-input" autocomplete="off" placeholder="Password" autofocus>
+      <button id="gate-submit" type="button">Enter</button>
+      <div class="err" id="gate-err" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <main class="wrap" id="main" hidden>
+    <header>
+      <div class="brand">
+        <img class="brand-icon" src="assets/dwell-icon.png" alt="Dwell Church">
+        <div class="brand-wordmark">dwell</div>
+        <div class="brand-tag">INTERVIEWS</div>
+      </div>
+      <h1>Set your interview availability</h1>
+      <p class="subtitle">Click times you're free for a 15-minute phone call.</p>
+    </header>
+
+    <section class="card">
+      <h2>Who are you?</h2>
+      <p class="help">Pick your name. The grid will load with your saved times (if any).</p>
+      <div class="picker-row">
+        <label for="reviewer-pick">I'm:</label>
+        <select id="reviewer-pick">
+          <option value="">— Pick your name —</option>
+        </select>
+        <span class="status info" id="load-status"></span>
+      </div>
+    </section>
+
+    <section class="card" id="grid-card" hidden>
+      <h2>Your availability</h2>
+      <p class="help">Click slots to mark when you're free. Click and drag to paint a block. Times shown in <strong>Pacific Time</strong> — that's how candidates see them too.</p>
+      <div id="grid"></div>
+    </section>
+
+    <div class="save-bar" id="save-bar" hidden>
+      <span class="count" id="count">0 slots selected</span>
+      <button type="button" class="btn-primary" id="save-btn">Save my availability</button>
+      <div class="status" id="save-status" aria-live="polite"></div>
+    </div>
+
+    <footer>
+      Dwell Church of the Peninsula · interview scheduler
+    </footer>
+  </main>
+
+<script>
+/* =====================================================================
+ * CONFIG — fill in APPS_SCRIPT_URL after deploying Code.gs.
+ * ===================================================================== */
+const CONFIG = {
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzbw-WOlc1tZUjeQV91cWaOdBMwx02OW40rFSG5nR4Mn9U5QShKVk79vA4lQbw7P54d/exec",
+
+  // Soft password — must match REVIEWER_PASSWORD in Code.gs.
+  PASSWORD: "dwell-interviews-2026",
+
+  // Slot length (minutes). Must match SLOT_MINUTES in Code.gs.
+  SLOT_MINUTES: 20,
+
+  // Days the grid covers, starting from today (PT).
+  DAYS_FORWARD: 14,
+
+  // Daily window the grid offers — 8:00 AM through 8:00 PM Pacific.
+  // Edit these if reviewers want earlier/later slots.
+  HOUR_START: 8,
+  HOUR_END: 20,
+};
+
+/* Reviewer roster — kept in sync with REVIEWERS in Code.gs. */
+const REVIEWERS = [
+  { id: "matt-stephan",     name: "Matt Stephan" },
+  { id: "karina-wilhelms",  name: "Karina Wilhelms" },
+  { id: "eunice-nichols",   name: "Eunice Nichols" },
+  { id: "brian-wo",         name: "Brian Wo" },
+  { id: "lisa-mario",       name: "Lisa Mario" },
+  { id: "annie-kuo",        name: "Annie Kuo" },
+];
+
+/* =====================================================================
+ * Password gate
+ * ===================================================================== */
+(function gateInit(){
+  const gate    = document.getElementById('gate');
+  const main    = document.getElementById('main');
+  const input   = document.getElementById('gate-input');
+  const submit  = document.getElementById('gate-submit');
+  const err     = document.getElementById('gate-err');
+
+  if (sessionStorage.getItem('scheduler_unlocked') === '1') {
+    main.hidden = false;
+    initApp();
+    return;
+  }
+  gate.hidden = false;
+
+  function tryUnlock() {
+    if (input.value === CONFIG.PASSWORD) {
+      sessionStorage.setItem('scheduler_unlocked', '1');
+      gate.hidden = true;
+      main.hidden = false;
+      initApp();
+    } else {
+      err.textContent = "That doesn't match. Try again.";
+      input.value = '';
+      input.focus();
+    }
+  }
+  submit.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+})();
+
+/* =====================================================================
+ * State
+ * ===================================================================== */
+let selectedReviewer = null;            // { id, name }
+const selectedSlots = new Set();         // ISO start strings of currently-selected slots
+const bookedSlots = new Set();           // ISO start strings that are already booked (locked)
+
+/* =====================================================================
+ * App init (runs after the gate is satisfied)
+ * ===================================================================== */
+function initApp() {
+  const select = document.getElementById('reviewer-pick');
+  REVIEWERS.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = r.name;
+    select.appendChild(opt);
+  });
+  select.addEventListener('change', onReviewerChange);
+
+  document.getElementById('save-btn').addEventListener('click', saveAvailability);
+}
+
+async function onReviewerChange(e) {
+  const id = e.target.value;
+  if (!id) {
+    selectedReviewer = null;
+    document.getElementById('grid-card').hidden = true;
+    document.getElementById('save-bar').hidden = true;
+    return;
+  }
+  selectedReviewer = REVIEWERS.find(r => r.id === id);
+  selectedSlots.clear();
+  bookedSlots.clear();
+
+  document.getElementById('grid-card').hidden = false;
+  document.getElementById('save-bar').hidden = false;
+  document.getElementById('save-status').textContent = '';
+
+  setLoadStatus('Loading your saved times…', 'info');
+  await loadExistingAvailability(id);
+  renderGrid();
+  updateCount();
+  setLoadStatus(selectedSlots.size > 0
+    ? 'Loaded your ' + selectedSlots.size + ' previously-saved slot' + (selectedSlots.size === 1 ? '' : 's') + '.'
+    : 'Fresh slate — paint the times you\'re free.', 'info');
+}
+
+async function loadExistingAvailability(reviewerId) {
+  if (CONFIG.APPS_SCRIPT_URL.startsWith('REPLACE_ME')) return;
+  try {
+    const url = CONFIG.APPS_SCRIPT_URL +
+      '?action=availability&reviewer=' + encodeURIComponent(reviewerId) +
+      '&include_booked=true';
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'unknown error');
+    (data.slots || []).forEach(s => {
+      selectedSlots.add(s.start);
+      if (s.booked) bookedSlots.add(s.start);
+    });
+  } catch (err) {
+    setLoadStatus('Could not load existing times: ' + err.message, 'error');
+  }
+}
+
+/* =====================================================================
+ * Render the day-by-day grid
+ * ===================================================================== */
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const days = generateDays();
+  days.forEach(day => {
+    const section = document.createElement('div');
+    section.className = 'day';
+
+    const header = document.createElement('div');
+    header.className = 'day-header';
+    const name = document.createElement('div');
+    name.className = 'day-name';
+    name.textContent = day.label;
+    header.appendChild(name);
+
+    const actions = document.createElement('div');
+    actions.className = 'day-actions';
+    const selectAllBtn = document.createElement('button');
+    selectAllBtn.type = 'button';
+    selectAllBtn.textContent = 'Select all';
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.textContent = 'Clear day';
+    actions.append(selectAllBtn, clearBtn);
+    header.appendChild(actions);
+    section.appendChild(header);
+
+    const slotGrid = document.createElement('div');
+    slotGrid.className = 'slot-grid';
+    day.slots.forEach(slot => slotGrid.appendChild(makeSlotCell(slot)));
+    section.appendChild(slotGrid);
+
+    selectAllBtn.addEventListener('click', () => {
+      day.slots.forEach(slot => {
+        if (!bookedSlots.has(slot.start)) selectedSlots.add(slot.start);
+      });
+      refreshSlotStyles();
+      updateCount();
+    });
+    clearBtn.addEventListener('click', () => {
+      day.slots.forEach(slot => {
+        if (!bookedSlots.has(slot.start)) selectedSlots.delete(slot.start);
+      });
+      refreshSlotStyles();
+      updateCount();
+    });
+
+    grid.appendChild(section);
+  });
+
+  installDragPaint();
+}
+
+function makeSlotCell(slot) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'slot';
+  btn.dataset.start = slot.start;
+  btn.dataset.end = slot.end;
+  btn.textContent = formatPTTime(slot.start);
+  if (selectedSlots.has(slot.start)) btn.classList.add('selected');
+  if (bookedSlots.has(slot.start))   btn.classList.add('booked');
+  btn.addEventListener('click', () => {
+    if (bookedSlots.has(slot.start)) return;
+    if (selectedSlots.has(slot.start)) selectedSlots.delete(slot.start);
+    else selectedSlots.add(slot.start);
+    refreshSlotStyles();
+    updateCount();
+  });
+  return btn;
+}
+
+function refreshSlotStyles() {
+  document.querySelectorAll('.slot').forEach(el => {
+    const start = el.dataset.start;
+    el.classList.toggle('selected', selectedSlots.has(start));
+    el.classList.toggle('booked',   bookedSlots.has(start));
+  });
+}
+
+function updateCount() {
+  // Don't count booked slots in the user-visible count — those aren't
+  // "selected" by the reviewer in this session, they're locked artifacts.
+  let active = 0;
+  selectedSlots.forEach(s => { if (!bookedSlots.has(s)) active++; });
+  const bookedNote = bookedSlots.size > 0 ? ' (' + bookedSlots.size + ' already booked)' : '';
+  document.getElementById('count').textContent =
+    active + ' slot' + (active === 1 ? '' : 's') + ' selected' + bookedNote;
+}
+
+/* =====================================================================
+ * Drag-to-paint
+ *
+ * Mouse/touch idiom: pointerdown on a slot remembers whether the slot
+ * was previously selected; pointermove over other slots applies the
+ * inverse (so dragging from a selected cell un-selects everything you
+ * cross, and vice versa). Booked cells are skipped entirely.
+ * ===================================================================== */
+function installDragPaint() {
+  const grid = document.getElementById('grid');
+  let painting = false;
+  let paintMode = null; // "add" or "remove"
+
+  grid.addEventListener('pointerdown', e => {
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+    const start = slot.dataset.start;
+    if (bookedSlots.has(start)) return;
+    painting = true;
+    paintMode = selectedSlots.has(start) ? 'remove' : 'add';
+    // The pointerdown's own cell will toggle via the click handler — we
+    // don't apply paintMode here to avoid double-toggling on the start cell.
+  });
+
+  grid.addEventListener('pointerover', e => {
+    if (!painting) return;
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+    const start = slot.dataset.start;
+    if (bookedSlots.has(start)) return;
+    if (paintMode === 'add')    selectedSlots.add(start);
+    if (paintMode === 'remove') selectedSlots.delete(start);
+    refreshSlotStyles();
+    updateCount();
+  });
+
+  // End drag wherever the pointer goes up — including outside the grid.
+  window.addEventListener('pointerup',     () => { painting = false; });
+  window.addEventListener('pointercancel', () => { painting = false; });
+}
+
+/* =====================================================================
+ * Generate the day rows
+ * ===================================================================== */
+function generateDays() {
+  const days = [];
+  const today = new Date();
+  // Anchor at PT midnight today. We construct each slot in PT-local terms
+  // by formatting numerics ourselves so DST shifts don't surprise us.
+  for (let i = 0; i < CONFIG.DAYS_FORWARD; i++) {
+    const day = new Date(today);
+    day.setDate(today.getDate() + i);
+
+    const label = day.toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric',
+      timeZone: 'America/Los_Angeles',
+    });
+
+    const slots = [];
+    const totalSlots = ((CONFIG.HOUR_END - CONFIG.HOUR_START) * 60) / CONFIG.SLOT_MINUTES;
+    for (let j = 0; j < totalSlots; j++) {
+      const minutesFromStart = j * CONFIG.SLOT_MINUTES;
+      const hour = CONFIG.HOUR_START + Math.floor(minutesFromStart / 60);
+      const min  = minutesFromStart % 60;
+      // Build an ISO-with-PT-offset timestamp for this slot. We fix the
+      // offset using a probe — it handles DST correctly because the
+      // probe is anchored to *this* day, not the script's load-time TZ.
+      const start = ptDateAt(day, hour, min);
+      const end   = new Date(start.getTime() + CONFIG.SLOT_MINUTES * 60 * 1000);
+      slots.push({ start: start.toISOString(), end: end.toISOString() });
+    }
+    days.push({ label, slots });
+  }
+  return days;
+}
+
+/**
+ * Build a Date at the given Pacific-Time hour/minute on the given day,
+ * accounting for DST. Strategy: format the day's midnight UTC in PT and
+ * extract the offset, then construct the actual instant.
+ */
+function ptDateAt(day, hour, minute) {
+  // Get the calendar Y/M/D in PT for this day
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const parts = fmt.format(day).split('-'); // "YYYY-MM-DD"
+  const yyyy = parts[0], mm = parts[1], dd = parts[2];
+  const hh = String(hour).padStart(2, '0');
+  const mi = String(minute).padStart(2, '0');
+  // Probe: build an instant assuming PT is UTC-8, see what wall-clock PT
+  // says, then correct.
+  const guess = new Date(yyyy + '-' + mm + '-' + dd + 'T' + hh + ':' + mi + ':00-08:00');
+  const ptHour = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false,
+  }).format(guess), 10);
+  // If the probe's wall-clock hour differs from intended hour, we're in
+  // PDT (UTC-7) and need to subtract one hour.
+  if (ptHour === hour + 1 || (hour === 23 && ptHour === 0)) {
+    return new Date(guess.getTime() - 60 * 60 * 1000);
+  }
+  return guess;
+}
+
+function formatPTTime(iso) {
+  return new Date(iso).toLocaleTimeString('en-US', {
+    timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit',
+  });
+}
+
+/* =====================================================================
+ * Save: POST availability to the backend
+ * ===================================================================== */
+async function saveAvailability() {
+  if (!selectedReviewer) return;
+  if (CONFIG.APPS_SCRIPT_URL.startsWith('REPLACE_ME')) {
+    setSaveStatus('Backend not configured yet — tell Matt.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  setSaveStatus('Saving…', 'info');
+
+  // Include both currently-selected AND already-booked slots in the
+  // submission. Reason: the POST replaces the reviewer's full schedule;
+  // if we omitted the booked slots, the backend would have to special-case
+  // them. Sending them through preserves the booked anchors and keeps
+  // the backend logic simple.
+  const slots = Array.from(selectedSlots).map(start => {
+    const end = new Date(new Date(start).getTime() + CONFIG.SLOT_MINUTES * 60 * 1000).toISOString();
+    return { start, end };
+  });
+
+  const fd = new FormData();
+  fd.append('action', 'postAvailability');
+  fd.append('password', CONFIG.PASSWORD);
+  fd.append('reviewer_id', selectedReviewer.id);
+  fd.append('slots', JSON.stringify(slots));
+
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+    // Confirm by re-fetching: the backend should now report exactly
+    // the same set of slots we just submitted (modulo any new bookings).
+    await new Promise(r => setTimeout(r, 800));
+    const verify = await fetch(CONFIG.APPS_SCRIPT_URL +
+      '?action=availability&reviewer=' + encodeURIComponent(selectedReviewer.id) +
+      '&include_booked=true');
+    const data = await verify.json();
+    const savedCount = (data.slots || []).length;
+    setSaveStatus('Saved — ' + savedCount + ' slot' + (savedCount === 1 ? '' : 's') + ' on the calendar.', 'success');
+  } catch (err) {
+    setSaveStatus('Save failed: ' + err.message + '. Check your connection and try again.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setLoadStatus(msg, kind) {
+  const el = document.getElementById('load-status');
+  el.textContent = msg;
+  el.className = 'status ' + (kind || 'info');
+}
+function setSaveStatus(msg, kind) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'status ' + (kind || 'info');
+}
+</script>
+</body>
+</html>
