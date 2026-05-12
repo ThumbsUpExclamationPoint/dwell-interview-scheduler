@@ -52,14 +52,34 @@
     .card h2 { font-size: 17px; font-weight: 600; margin: 0 0 4px; color: #111827; }
     .card .help { color: #6b7280; font-size: 14px; margin: 0 0 14px; }
 
-    /* -------- Reviewer picker -------- */
-    .picker-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .picker-row label { font-size: 14px; color: #374151; font-weight: 500; }
-    select {
-      padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;
-      font-size: 15px; font-family: inherit; background: #fff;
+    /* -------- Reviewer cards (6-card picker — replaces the dropdown so       */
+    /* you can't accidentally click the wrong name) ----------------------- */
+    .reviewers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .reviewer-btn {
+      padding: 16px 18px; border: 1px solid #d1d5db; border-radius: 10px;
+      background: #fff; color: #1f2937; font-size: 15px; font-weight: 500;
+      cursor: pointer; text-align: center; transition: all 0.15s ease;
+      font-family: inherit;
     }
-    select:focus { outline: none; border-color: #00cccc; box-shadow: 0 0 0 3px rgba(0,204,204,0.15); }
+    .reviewer-btn:hover { border-color: #00cccc; background: #f0fdfd; }
+    .reviewer-btn .me { display: block; font-size: 12px; color: #6b7280; font-weight: 400; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .reviewer-btn:hover .me { color: #00cccc; }
+
+    /* -------- Identity banner (persistent header after a reviewer is chosen) */
+    .identity-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      background: #ecfeff; border: 1px solid #67e8f9; border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 16px;
+    }
+    .identity-banner .who { font-size: 15px; color: #155e75; }
+    .identity-banner .who strong { color: #0e7490; }
+    .identity-banner .change-btn {
+      font-size: 13px; font-family: inherit; padding: 6px 12px;
+      background: #fff; border: 1px solid #67e8f9; color: #0e7490;
+      border-radius: 8px; cursor: pointer; font-weight: 500;
+    }
+    .identity-banner .change-btn:hover { background: #cffafe; }
 
     /* -------- Day section -------- */
     .day { margin-bottom: 22px; }
@@ -115,6 +135,12 @@
     }
     button.btn-primary:hover:not(:disabled) { background: #00b3b3; border-color: #00b3b3; }
     button.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.btn-secondary {
+      background: #fff; color: #374151; border: 1px solid #d1d5db;
+      font-weight: 500; padding: 10px 18px; border-radius: 8px;
+      font-size: 15px; font-family: inherit; cursor: pointer;
+    }
+    button.btn-secondary:hover:not(:disabled) { border-color: #00cccc; color: #00cccc; }
 
     .status { font-size: 14px; min-height: 18px; }
     .status.success { color: #15803d; }
@@ -145,6 +171,22 @@
     }
     .gate-card button:hover { background: #00b3b3; border-color: #00b3b3; }
     .gate-card .err { color: #b91c1c; font-size: 13px; margin-top: 4px; min-height: 16px; }
+
+    /* -------- Modal: identity + save confirmation ------------------------ */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 20; padding: 20px;
+    }
+    .modal-backdrop[hidden] { display: none !important; }
+    .modal-card {
+      background: #fff; border-radius: 12px; padding: 24px 26px;
+      max-width: 440px; width: 100%; box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    }
+    .modal-card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #111827; }
+    .modal-card p  { margin: 0 0 18px; color: #4b5563; font-size: 15px; }
+    .modal-card p strong { color: #0e7490; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 
     footer {
       text-align: center; color: #9ca3af; font-size: 13px;
@@ -180,21 +222,27 @@
       <p class="subtitle">Click times you're free for a 15-minute phone call.</p>
     </header>
 
-    <section class="card">
+    <!-- Picker: 6 cards (replaces the old dropdown). Each card is one      -->
+    <!-- reviewer. Clicking opens a confirmation modal that locks identity -->
+    <!-- to that reviewer for the session. This stops anyone from           -->
+    <!-- accidentally painting on someone else's row.                        -->
+    <section class="card" id="picker-card">
       <h2>Who are you?</h2>
-      <p class="help">Pick your name. The grid will load with your saved times (if any).</p>
-      <div class="picker-row">
-        <label for="reviewer-pick">I'm:</label>
-        <select id="reviewer-pick">
-          <option value="">— Pick your name —</option>
-        </select>
-        <span class="status info" id="load-status"></span>
-      </div>
+      <p class="help">Click your own name. This locks your session — only you can edit your slots.</p>
+      <div class="reviewers-grid" id="reviewer-grid"></div>
     </section>
 
+    <!-- Identity banner: shows after a reviewer is picked. Persistent     -->
+    <!-- reminder of whose availability is being edited.                    -->
+    <div class="identity-banner" id="identity-banner" hidden>
+      <span class="who">Editing availability for <strong id="who-name">—</strong></span>
+      <button type="button" class="change-btn" id="change-reviewer">Switch reviewer</button>
+    </div>
+
     <section class="card" id="grid-card" hidden>
-      <h2>Your availability</h2>
+      <h2 id="grid-card-title">Your availability</h2>
       <p class="help">Click slots to mark when you're free. Click and drag to paint a block. Times shown in <strong>Pacific Time</strong> — that's how candidates see them too.</p>
+      <div class="status info" id="load-status" style="margin-bottom: 12px;"></div>
       <div id="grid"></div>
     </section>
 
@@ -208,6 +256,33 @@
       Dwell Church of the Peninsula · interview scheduler
     </footer>
   </main>
+
+  <!-- Identity-confirmation modal: opens when a reviewer card is clicked. -->
+  <!-- Forces an explicit "yes, that's me" before we load anyone's slots.   -->
+  <div class="modal-backdrop" id="identity-modal" hidden>
+    <div class="modal-card">
+      <h3>Confirm — that's you?</h3>
+      <p>You're about to edit <strong id="confirm-name">—</strong>'s availability. Anyone with this password could pick the wrong name; double-check before continuing.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="confirm-cancel">Cancel</button>
+        <button type="button" class="btn-primary"   id="confirm-ok">Yes, that's me</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save-confirmation modal: opens on Save. Re-states the reviewer and  -->
+  <!-- slot count so a long session doesn't accidentally save under the    -->
+  <!-- wrong identity.                                                       -->
+  <div class="modal-backdrop" id="save-modal" hidden>
+    <div class="modal-card">
+      <h3>Save your availability?</h3>
+      <p>Saving <strong id="save-count">0 slots</strong> as <strong id="save-name">—</strong>'s availability. This replaces any previously-saved times.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="save-cancel">Cancel</button>
+        <button type="button" class="btn-primary"   id="save-ok">Save</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 /* =====================================================================
@@ -276,45 +351,90 @@ const REVIEWERS = [
 
 /* =====================================================================
  * State
+ *
+ * selectedReviewer is the LOCKED identity for the rest of this session
+ * (until the user clicks "Switch reviewer"). All saves and loads use
+ * THIS reviewer — there is no other way to set the reviewer id.
+ *
+ * loadToken guards against a slow earlier fetch overwriting a faster
+ * later fetch when the user switches reviewers mid-load. We bump it
+ * on every reviewer change and ignore any response whose token doesn't
+ * match the current one.
  * ===================================================================== */
 let selectedReviewer = null;            // { id, name }
-const selectedSlots = new Set();         // ISO start strings of currently-selected slots
-const bookedSlots = new Set();           // ISO start strings that are already booked (locked)
+let pendingReviewer  = null;             // { id, name } — held by the confirm modal
+let loadToken        = 0;
+const selectedSlots  = new Set();        // ISO start strings of currently-selected slots
+const bookedSlots    = new Set();        // ISO start strings that are already booked (locked)
 
 /* =====================================================================
  * App init (runs after the gate is satisfied)
  * ===================================================================== */
 function initApp() {
-  const select = document.getElementById('reviewer-pick');
-  REVIEWERS.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.id;
-    opt.textContent = r.name;
-    select.appendChild(opt);
-  });
-  select.addEventListener('change', onReviewerChange);
+  renderReviewerPicker();
+  document.getElementById('save-btn').addEventListener('click', onSaveClick);
+  document.getElementById('change-reviewer').addEventListener('click', resetToPicker);
 
-  document.getElementById('save-btn').addEventListener('click', saveAvailability);
+  // Identity-confirmation modal wiring
+  document.getElementById('confirm-cancel').addEventListener('click', () => {
+    pendingReviewer = null;
+    document.getElementById('identity-modal').hidden = true;
+  });
+  document.getElementById('confirm-ok').addEventListener('click', commitReviewerSelection);
+
+  // Save-confirmation modal wiring
+  document.getElementById('save-cancel').addEventListener('click', () => {
+    document.getElementById('save-modal').hidden = true;
+  });
+  document.getElementById('save-ok').addEventListener('click', confirmSave);
 }
 
-async function onReviewerChange(e) {
-  const id = e.target.value;
-  if (!id) {
-    selectedReviewer = null;
-    document.getElementById('grid-card').hidden = true;
-    document.getElementById('save-bar').hidden = true;
-    return;
-  }
-  selectedReviewer = REVIEWERS.find(r => r.id === id);
+/* =====================================================================
+ * Render: the 6-card reviewer picker
+ * ===================================================================== */
+function renderReviewerPicker() {
+  const grid = document.getElementById('reviewer-grid');
+  grid.innerHTML = '';
+  REVIEWERS.forEach(r => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'reviewer-btn';
+    btn.innerHTML = '<span class="me">I\'m</span>' + escapeHtml(r.name);
+    btn.dataset.id = r.id;
+    btn.addEventListener('click', () => askToConfirm(r));
+    grid.appendChild(btn);
+  });
+}
+
+function askToConfirm(reviewer) {
+  pendingReviewer = reviewer;
+  document.getElementById('confirm-name').textContent = reviewer.name;
+  document.getElementById('identity-modal').hidden = false;
+}
+
+async function commitReviewerSelection() {
+  document.getElementById('identity-modal').hidden = true;
+  if (!pendingReviewer) return;
+  selectedReviewer = pendingReviewer;
+  pendingReviewer = null;
+
   selectedSlots.clear();
   bookedSlots.clear();
+  loadToken++;
 
+  // Swap UI: hide picker, show banner + grid + save bar
+  document.getElementById('picker-card').hidden = true;
+  document.getElementById('identity-banner').hidden = false;
+  document.getElementById('who-name').textContent = selectedReviewer.name;
   document.getElementById('grid-card').hidden = false;
+  document.getElementById('grid-card-title').textContent = selectedReviewer.name + "'s availability";
   document.getElementById('save-bar').hidden = false;
   document.getElementById('save-status').textContent = '';
 
   setLoadStatus('Loading your saved times…', 'info');
-  await loadExistingAvailability(id);
+  const myToken = loadToken;
+  await loadExistingAvailability(selectedReviewer.id, myToken);
+  if (myToken !== loadToken) return; // a newer load superseded us
   renderGrid();
   updateCount();
   setLoadStatus(selectedSlots.size > 0
@@ -322,7 +442,21 @@ async function onReviewerChange(e) {
     : 'Fresh slate — paint the times you\'re free.', 'info');
 }
 
-async function loadExistingAvailability(reviewerId) {
+function resetToPicker() {
+  selectedReviewer = null;
+  selectedSlots.clear();
+  bookedSlots.clear();
+  loadToken++;
+  document.getElementById('identity-banner').hidden = true;
+  document.getElementById('grid-card').hidden = true;
+  document.getElementById('save-bar').hidden = true;
+  document.getElementById('picker-card').hidden = false;
+  document.getElementById('grid').innerHTML = '';
+  setLoadStatus('', 'info');
+  setSaveStatus('', 'info');
+}
+
+async function loadExistingAvailability(reviewerId, myToken) {
   if (CONFIG.APPS_SCRIPT_URL.startsWith('REPLACE_ME')) return;
   try {
     const url = CONFIG.APPS_SCRIPT_URL +
@@ -330,12 +464,14 @@ async function loadExistingAvailability(reviewerId) {
       '&include_booked=true';
     const res = await fetch(url);
     const data = await res.json();
+    if (myToken !== loadToken) return; // stale response, ignore
     if (!data.ok) throw new Error(data.error || 'unknown error');
     (data.slots || []).forEach(s => {
       selectedSlots.add(s.start);
       if (s.booked) bookedSlots.add(s.start);
     });
   } catch (err) {
+    if (myToken !== loadToken) return;
     setLoadStatus('Could not load existing times: ' + err.message, 'error');
   }
 }
@@ -546,14 +682,29 @@ function formatPTTime(iso) {
 }
 
 /* =====================================================================
- * Save: POST availability to the backend
+ * Save: open the confirmation modal first; the actual POST happens in
+ * confirmSave() once the user clicks "Save" inside the modal. This means
+ * the reviewer has to re-acknowledge whose calendar they're writing to,
+ * which is the second guard (the first is the identity-confirmation
+ * modal on initial pick).
  * ===================================================================== */
-async function saveAvailability() {
+function onSaveClick() {
   if (!selectedReviewer) return;
   if (CONFIG.APPS_SCRIPT_URL.startsWith('REPLACE_ME')) {
     setSaveStatus('Backend not configured yet — tell Matt.', 'error');
     return;
   }
+  let activeCount = 0;
+  selectedSlots.forEach(s => { if (!bookedSlots.has(s)) activeCount++; });
+  document.getElementById('save-count').textContent =
+    activeCount + ' slot' + (activeCount === 1 ? '' : 's');
+  document.getElementById('save-name').textContent = selectedReviewer.name;
+  document.getElementById('save-modal').hidden = false;
+}
+
+async function confirmSave() {
+  document.getElementById('save-modal').hidden = true;
+  if (!selectedReviewer) return;
 
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
@@ -602,6 +753,12 @@ function setSaveStatus(msg, kind) {
   const el = document.getElementById('save-status');
   el.textContent = msg;
   el.className = 'status ' + (kind || 'info');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
 }
 </script>
 </body>

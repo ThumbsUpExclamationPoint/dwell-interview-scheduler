@@ -74,6 +74,12 @@ const NOTIFY_EMAIL = "matt@dwellpeninsula.com";
  *   ?action=ping                       → health check
  *   ?action=reviewers                  → list of {id, name}
  *   ?action=availability&reviewer=ID   → list of {start, end} open slots
+ *   ?action=audit&password=PW          → DIAGNOSTIC: every row in the
+ *                                        Availability tab grouped by
+ *                                        reviewer_id, plus any orphan
+ *                                        rows whose reviewer_id isn't in
+ *                                        the REVIEWERS map. Password-gated
+ *                                        so it isn't a public data leak.
  */
 function doGet(e) {
   try {
@@ -81,6 +87,10 @@ function doGet(e) {
     if (p.action === "ping")          return jsonResponse({ ok: true, msg: "scheduler alive" });
     if (p.action === "reviewers")     return jsonResponse({ ok: true, reviewers: listReviewers() });
     if (p.action === "availability")  return jsonResponse({ ok: true, slots: getAvailableSlots(p.reviewer, { includeBooked: p.include_booked === "true" }) });
+    if (p.action === "audit") {
+      if (p.password !== REVIEWER_PASSWORD) return jsonResponse({ ok: false, error: "bad password" });
+      return jsonResponse({ ok: true, audit: auditAvailability() });
+    }
     return textResponse("Dwell Interview Scheduler — alive.\nTry ?action=reviewers");
   } catch (err) {
     console.error(err);
@@ -413,4 +423,75 @@ function debugDumpAvailability() {
     console.log(REVIEWERS[id].name + " (" + id + "): " + slots.length + " open slots");
     slots.slice(0, 5).forEach(s => console.log("  " + s.start + " → " + s.end));
   });
+}
+
+// =====================================================================
+// Diagnostics & cleanup (for debugging "wrong reviewer's slots showing
+// up on my menu" type complaints)
+// =====================================================================
+
+/**
+ * Walk the Availability tab and group every row by its reviewer_id. The
+ * result has one bucket per known reviewer plus an `_orphans` bucket for
+ * any row whose reviewer_id isn't in the REVIEWERS map (which would mean
+ * a manual edit, a typo, or a stale slug from a removed reviewer).
+ *
+ * This is the conclusive answer to "are slots cross-contaminating?". If
+ * one reviewer's bucket contains slots they swear they didn't paint, the
+ * cause is upstream (someone painted while logged in under the wrong
+ * name — see the reviewer.html identity-confirmation flow).
+ */
+function auditAvailability() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName("Availability");
+  const data = sheet.getDataRange().getValues();
+  data.shift(); // drop header
+
+  const buckets = { _orphans: [] };
+  Object.keys(REVIEWERS).forEach(id => { buckets[id] = []; });
+
+  data.forEach((r, i) => {
+    if (!r[1] || !r[2]) return; // skip empty rows
+    const rowEntry = {
+      sheet_row: i + 2, // +2: 1 for 0-index, 1 for header
+      reviewer_id: r[0],
+      start: toIso(r[1]),
+      end: toIso(r[2]),
+      created_at: r[3] ? toIso(r[3]) : null,
+    };
+    if (buckets[r[0]] !== undefined) buckets[r[0]].push(rowEntry);
+    else                              buckets._orphans.push(rowEntry);
+  });
+
+  const summary = { total_rows: data.length, orphan_rows: buckets._orphans.length };
+  Object.keys(REVIEWERS).forEach(id => {
+    summary[id] = buckets[id].length;
+  });
+  return { summary: summary, by_reviewer: buckets };
+}
+
+/**
+ * Run this from the Apps Script editor (Function dropdown → ▶ Run) if
+ * `auditAvailability` shows orphan rows — rows whose reviewer_id isn't
+ * one of the six valid slugs. Deletes them and logs what was removed.
+ *
+ * SAFE to re-run. Does nothing if the sheet is clean.
+ */
+function cleanupOrphanedRows() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName("Availability");
+  const data = sheet.getDataRange().getValues();
+
+  let removed = 0;
+  // Walk bottom-up so deleting a row doesn't shift the indices we haven't visited yet.
+  for (let i = data.length - 1; i >= 1; i--) {
+    const reviewerId = data[i][0];
+    if (!reviewerId || REVIEWERS[reviewerId] === undefined) {
+      console.log("Removing orphan row " + (i + 1) + ": reviewer_id=" + JSON.stringify(reviewerId) +
+                  " start=" + data[i][1] + " end=" + data[i][2]);
+      sheet.deleteRow(i + 1);
+      removed++;
+    }
+  }
+  console.log("Removed " + removed + " orphan row(s).");
 }
